@@ -18,7 +18,7 @@ ORIGINAL_COLUMNS = {
 STANDARDIZED_COLUMNS = {
     'JITTER': 'Jitter',
     'BCET': 'C_i_j_min',  # Minimum execution time (Best Case)
-    'WCET': 'C_i_j',      # Maximum execution time (Worst Case)
+    'WCET': 'C_i_j',      # Maximum execution time (Worst Case) - C_i_j is the standard notation for execution time of task i on PE j
     'PERIOD': 'T_i',      # Task period
     'DEADLINE': 'D_i',    # Relative deadline
     'PE': 'PE',           # Processing Element

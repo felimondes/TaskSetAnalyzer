@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Optional
 
-from src.config import (
+from config import (
     DISTRIBUTION_MAPPING,
     CORES,
     TASKS,
@@ -31,12 +31,13 @@ class TaskSetParser:
                 f"Task sets directory not found at {self.task_sets_root}"
             )
 
-    def parse_task_set(
+    def parse(
         self,
         distribution: str,
         util_level: float,
         csv_identifier: int
-    ) -> TaskSet:
+    ) -> pd.DataFrame:
+        #inputs are steps in the path to the csv file.
 
         # Validate distribution type
         if distribution.lower() not in self.DISTRIBUTION_MAPPING:
