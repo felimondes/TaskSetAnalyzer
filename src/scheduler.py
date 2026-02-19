@@ -4,11 +4,9 @@ class Scheduler(ABC):
     jobs = None
     tasks = None
     
-    @abstractmethod
-    def get_hyperperiod(self):
+    def get_running_time(self):
         pass
     
-    @abstractmethod
     def get_next_task(self, current_time):
         pass
 
@@ -18,6 +16,10 @@ class Scheduler(ABC):
 
     @abstractmethod
     def is_schedulable(self):
+        pass
+    
+    @abstractmethod
+    def results(self):
         pass
 
     @abstractmethod

@@ -1,10 +1,9 @@
 from abc import abstractmethod
 from scheduler import Scheduler
 from job import Job
-import heapq
 
 
-class EDF(Scheduler):
+class RateMonotonic(Scheduler):
     def __init__(self):
         self.tasks = None
         self.jobs_by_arrival = {}  # arrival_time -> list of jobs
@@ -14,7 +13,7 @@ class EDF(Scheduler):
     def get_running_time(self):
         import math
         periods = self.tasks['T_i'].tolist()
-        hyperperiod = math.lcm(*periods) #found in the book
+        hyperperiod = math.lcm(*periods)
         return hyperperiod
     
     def set_tasks(self, tasks):
@@ -24,8 +23,7 @@ class EDF(Scheduler):
     def set_jobs(self):
         self.jobs_by_arrival = {}
         for index, row in self.tasks.iterrows():
-            num_jobs = self.get_running_time() // row['T_i']
-            for k in range(0, num_jobs):
+            for k in range(0, self.get_running_time() // row['T_i']):
                 job = Job(row, arrival_time=k * row['T_i'], deadline_offset=k * row['T_i'])
                 arrival = job.arrival_time
                 if arrival not in self.jobs_by_arrival:
@@ -43,8 +41,8 @@ class EDF(Scheduler):
         if not self.active_jobs:
             return None
         
-        # Sort by deadline (ascending) - earliest deadline first
-        next_job = min(self.active_jobs, key=lambda x: x.absolute_deadline)
+        # Sort by period (ascending) - shorter period = higher priority
+        next_job = min(self.active_jobs, key=lambda x: x.T)
         return next_job
 
     def execute_task(self, job, current_time):
@@ -58,14 +56,15 @@ class EDF(Scheduler):
             self.completed_jobs.append(job)
 
     def is_schedulable(self):
-        # EDF is schedulable if utilization <= 1
+        # Liu and Layland bound for Rate Monotonic
         utilization = sum(self.tasks['C_i'] / self.tasks['T_i'])
-        return utilization <= 1.0
+        n = len(self.tasks)
+        rm_bound = n * (2 ** (1/n) - 1)
+        return utilization <= rm_bound
 
     def results(self):
         return {
             'completed_jobs': self.completed_jobs,
             'schedulable': self.is_schedulable()
         }
-
 

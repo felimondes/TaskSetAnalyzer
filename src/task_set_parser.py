@@ -94,4 +94,12 @@ class TaskSetParser:
             'Deadline': 'D_i',
         }, inplace=True)
 
+        # Add task_id if it doesn't exist
+        if 'task_id' not in df.columns:
+            df.insert(0, 'task_id', range(1, len(df) + 1))
+
+        # Use C_i_j for C_i if C_i doesn't exist
+        if 'C_i' not in df.columns and 'C_i_j' in df.columns:
+            df['C_i'] = df['C_i_j']
+
         return df
