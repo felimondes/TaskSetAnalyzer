@@ -1,71 +1,54 @@
-from abc import abstractmethod
-from scheduler import Scheduler
-from job import Job
-import heapq
+from scheduler import PeriodicTaskSetScheduler
 
 
-class EDF(Scheduler):
-    def __init__(self):
-        self.tasks = None
-        self.jobs_by_arrival = {}  # arrival_time -> list of jobs
-        self.completed_jobs = []
-        self.active_jobs = []  # Jobs currently in the system
+class EDF(PeriodicTaskSetScheduler):
+
+    def select_next_job_from_active(self):
+        return min(self.active_jobs, key=lambda job: job.absolute_deadline)
     
-    def get_running_time(self):
-        import math
-        periods = self.tasks['T_i'].tolist()
-        hyperperiod = math.lcm(*periods) #found in the book
-        return hyperperiod
-    
-    def set_tasks(self, tasks):
-        self.tasks = tasks
-        self.set_jobs()
-
-    def set_jobs(self):
-        self.jobs_by_arrival = {}
-        for index, row in self.tasks.iterrows():
-            num_jobs = self.get_running_time() // row['T_i']
-            for k in range(0, num_jobs):
-                job = Job(row, arrival_time=k * row['T_i'], deadline_offset=k * row['T_i'])
-                arrival = job.arrival_time
-                if arrival not in self.jobs_by_arrival:
-                    self.jobs_by_arrival[arrival] = []
-                self.jobs_by_arrival[arrival].append(job)
-    
-    def get_next_task(self, current_time):
-        # Add newly arrived jobs
-        if current_time in self.jobs_by_arrival:
-            self.active_jobs.extend(self.jobs_by_arrival[current_time])
-        
-        # Remove completed jobs
-        self.active_jobs = [job for job in self.active_jobs if not job.is_completed()]
-        
-        if not self.active_jobs:
-            return None
-        
-        # Sort by deadline (ascending) - earliest deadline first
-        next_job = min(self.active_jobs, key=lambda x: x.absolute_deadline)
-        return next_job
-
-    def execute_task(self, job, current_time):
-        if job.start_time is None:
-            job.start_time = current_time
-        
-        job.execute(1)
-        
-        if job.is_completed():
-            job.completion_time = current_time + 1
-            self.completed_jobs.append(job)
-
     def is_schedulable(self):
-        # EDF is schedulable if utilization <= 1
         utilization = sum(self.tasks['C_i'] / self.tasks['T_i'])
         return utilization <= 1.0
 
-    def results(self):
-        return {
-            'completed_jobs': self.completed_jobs,
-            'schedulable': self.is_schedulable()
-        }
+
+if __name__ == '__main__':
+    import pandas as pd
+    from simulator import SchedulingSimulator
+    print("Testing EDF scheduler...")
+    
+    # Create a sample task set
+    task_set = pd.DataFrame({
+        'task_id': [1, 2],
+        'C_i': [2, 3],
+        'T_i': [6, 8],
+        'D_i': [6, 8]
+    })
+    
+    # Test schedulability
+    edf = EDF()
+    edf.set_tasks(task_set)
+    assert edf.is_schedulable() == True
+    print("✓ EDF schedulability test (utilization <= 1.0)")
+    
+    # Test job selection (EDF: earliest deadline first)
+    sim = SchedulingSimulator()
+    results = sim.run(task_set, edf)
+    assert results['schedulable'] == True
+    assert len(results['completed_jobs']) > 0
+    print(f"✓ EDF simulation completed {len(results['completed_jobs'])} jobs")
+    
+    # Test with overloaded task set
+    task_set_overloaded = pd.DataFrame({
+        'task_id': [1, 2, 3],
+        'C_i': [3, 3, 3],
+        'T_i': [5, 5, 5],
+        'D_i': [5, 5, 5]
+    })
+    edf_ol = EDF()
+    edf_ol.set_tasks(task_set_overloaded)
+    assert edf_ol.is_schedulable() == False
+    print("✓ EDF correctly identifies unschedulable task set (utilization > 1.0)")
+    
+    print("All EDF tests passed!\n")
 
 

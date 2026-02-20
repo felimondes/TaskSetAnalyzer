@@ -6,6 +6,9 @@ from rate_monotonic import RateMonotonic
 import csv
 import os
 from pathlib import Path
+import matplotlib.pyplot as plt
+import numpy as np
+from analysis import edf_processor_demand_test, compute_wcrts_from_completed_jobs
 
 def run_single_task_set(task_set, scheduler_name):
     """Run simulation on a single task set with specified scheduler"""
@@ -21,7 +24,7 @@ def run_single_task_set(task_set, scheduler_name):
     results = simulator.run(task_set, scheduler)
     return results
 
-def run_multiple_task_sets(distribution, util_min, util_max, csv_id=0, step=0.10):
+def run_multiple_task_sets(distribution, util_min, util_max, step=0.10):
     """
     Run simulations on multiple task sets within utilization range.
     
@@ -42,25 +45,37 @@ def run_multiple_task_sets(distribution, util_min, util_max, csv_id=0, step=0.10
     util_level = util_min
     while util_level <= util_max + 1e-9:  # +epsilon to handle floating point
         util_rounded = round(util_level, 2)
-        print(f"Processing {distribution} at utilization {util_rounded}...", end=" ", flush=True)
         
+
         try:
-            # Parse task set
-            task_set = parser.parse(distribution, util_rounded, csv_id)
+            task_set_dict = parser.parse_all_in_folder(distribution, util_rounded)
+
+
             
-            results[util_rounded] = {}
-            
-            # Run EDF
+            for filename, task_set in task_set_dict.items():
+                if filename.endswith(f"_{csv_id}.csv"):
+                    break
+
+
+            edf_sched = edf_processor_demand_test(task_set)
+
+            results[util_rounded] = {'analysis': {'edf_schedulable': edf_sched}}
+
+            # Run EDF (simulation)
             edf_results = run_single_task_set(task_set, 'edf')
             results[util_rounded]['edf'] = edf_results
-            
+            # observed WCRTs under EDF (from simulation)
+            results[util_rounded]['analysis']['edf_wcrts_observed'] = compute_wcrts_from_completed_jobs(edf_results['completed_jobs'])
+
             # Run Rate Monotonic
             rm_results = run_single_task_set(task_set, 'rm')
             results[util_rounded]['rm'] = rm_results
+            # observed WCRTs under RM (from simulation)
+            results[util_rounded]['analysis']['rm_wcrts_observed'] = compute_wcrts_from_completed_jobs(rm_results['completed_jobs'])
             
         except FileNotFoundError as e:
-            print("⚠ Skipped")
-            results[util_rounded] = None
+            # Per project requirement: do not fallback to synthetic data — always raise
+            raise
         
         util_level += step
     
@@ -141,6 +156,14 @@ def save_results_to_csv(results, output_file):
             
             writer.writerow(row)
     
+    #print average response times for RM and EDF
+    print("\nAverage Response Times:")
+    for util in sorted(results.keys()):
+        if results[util] is not None:
+            edf_avg = results[util]['edf']['metrics'].get('average_response_time', 'N/A') if results[util]['edf'] else 'N/A'
+            rm_avg = results[util]['rm']['metrics'].get('average_response_time', 'N/A') if results[util]['rm'] else 'N/A'
+            print(f"Utilization {util:.2f}: EDF Avg Response Time = {edf_avg}, RM Avg Response Time = {rm_avg}")
+
     print(f"Results saved to {output_file}")
 
 def create_plots(results, output_dir='results/plots'):
@@ -151,13 +174,6 @@ def create_plots(results, output_dir='results/plots'):
         results: Dictionary of results from run_multiple_task_sets
         output_dir: Directory to save plots
     """
-    try:
-        import matplotlib.pyplot as plt
-        import numpy as np
-    except ImportError:
-        print("matplotlib not installed. Skipping plots.")
-        print("Install with: pip install matplotlib")
-        return
     
     # Create output directory
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -165,7 +181,6 @@ def create_plots(results, output_dir='results/plots'):
     utils = sorted([u for u in results.keys() if results[u] is not None])
     
     if not utils:
-        print("No valid results to plot")
         return
     
     # Extract data
@@ -240,16 +255,41 @@ def create_plots(results, output_dir='results/plots'):
     plt.tight_layout()
     plot_file = os.path.join(output_dir, 'scheduling_comparison.png')
     plt.savefig(plot_file, dpi=300, bbox_inches='tight')
-    print(f"Plot saved to {plot_file}")
+    plt.close()
+
+    # Additional plot: WCRT comparison (max observed WCRT per util)
+    utils_w = []
+    edf_max_wcrts = []
+    rm_max_wcrts = []
+    for util in utils:
+        entry = results[util]
+        ana = entry.get('analysis', {})
+        edf_w = ana.get('edf_wcrts_observed', {})
+        rm_w = ana.get('rm_wcrts_observed', {})
+        utils_w.append(util)
+        edf_max_wcrts.append(max(edf_w.values()) if isinstance(edf_w, dict) and edf_w else 0)
+        rm_max_wcrts.append(max(rm_w.values()) if isinstance(rm_w, dict) and rm_w else 0)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.plot(utils_w, edf_max_wcrts, 'o-', label='EDF max observed WCRT', linewidth=2)
+    ax.plot(utils_w, rm_max_wcrts, 's-', label='RM max observed WCRT', linewidth=2)
+    ax.set_xlabel('Utilization')
+    ax.set_ylabel('Max Observed WCRT (time units)')
+    ax.set_title('Max Observed WCRT vs Utilization')
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    wcrt_file = os.path.join(output_dir, 'wcrt_comparison.png')
+    plt.savefig(wcrt_file, dpi=300, bbox_inches='tight')
     plt.close()
 
 if __name__ == '__main__':
     # Run simulations
     print("Running simulations...")
     results = run_multiple_task_sets(
-        distribution='automotive',
-        util_min=0.10,
-        util_max=0.20,
+        distribution='uunifast',
+        util_min=0.0,
+        util_max=1.0,
         csv_id=0,
         step=0.10
     )
@@ -257,11 +297,21 @@ if __name__ == '__main__':
     # Save results to CSV
     csv_file = 'results/scheduling_results.csv'
     save_results_to_csv(results, csv_file)
+
+    create_plots(results)
+    # Print EDF vs RM summary
+    print("\nEDF vs RM Summary:")
+    for util in sorted(results.keys()):
+        entry = results[util]
+        if entry is None:
+            print(f"Util {util:.2f}: No data (skipped)")
+            continue
+        analysis = entry.get('analysis', {})
+        edf_obs = analysis.get('edf_wcrts_observed', {})
+        print(f"Util {util:.2f}: EDF_sched={analysis.get('edf_schedulable')}")
+        print(f"  EDF observed WCRTs: {edf_obs}")
     
-    # Create plots
-    create_plots(results, 'results/plots')
     
-    print("\nDone! Check the 'results' directory for output files.")
 
 
 

@@ -11,82 +11,50 @@ from config import (
 
 
 class TaskSetParser:
-
     DISTRIBUTION_MAPPING = DISTRIBUTION_MAPPING
     CORES = CORES
     TASKS = TASKS
     JITTER = JITTER
 
-    def __init__(self, task_sets_root: Optional[str] = None):
-        if task_sets_root is None:
-            # Assume standard project structure: src/../task-sets
-            script_dir = Path(__file__).parent
-            project_root = script_dir.parent
-            self.task_sets_root = project_root / "task-sets"
-        else:
-            self.task_sets_root = Path(task_sets_root)
-
-        if not self.task_sets_root.exists():
-            raise FileNotFoundError(
-                f"Task sets directory not found at {self.task_sets_root}"
-            )
-
-    def parse(
-        self,
-        distribution: str,
-        util_level: float,
-        csv_identifier: int
-    ) -> pd.DataFrame:
-        #inputs are steps in the path to the csv file.
-
-        # Validate distribution type
-        if distribution.lower() not in self.DISTRIBUTION_MAPPING:
+    def __init__(self):
+        script_dir = Path(__file__).parent
+        project_root = script_dir.parent
+        self.task_sets_root = project_root / "task-sets"
+    def parse(self, distribution: str, util_level: float, csv_identifier: int) -> pd.DataFrame:
+        distribution = distribution.lower()
+        if distribution not in self.DISTRIBUTION_MAPPING:
             raise ValueError(
                 f"Invalid distribution type: '{distribution}'. "
                 f"Must be one of {list(self.DISTRIBUTION_MAPPING.keys())}"
             )
 
-        distribution = distribution.lower()
         dist_info = self.DISTRIBUTION_MAPPING[distribution]
-
-        # Format utilization level (e.g., 0.10 -> '0.10-util')
         util_folder = f"{util_level:.2f}-util"
-
-        # Format CSV filename (e.g., 'automotive_10.csv')
         csv_filename = f"{dist_info['prefix']}_{csv_identifier}.csv"
 
         # Construct the full path
-        csv_path = (
+        base_dir = (
             self.task_sets_root /
             'output' /
             dist_info['util_dist'] /
             dist_info['per_dist'] /
             self.CORES /
             self.TASKS /
-            self.JITTER /
-            util_folder /
-            'tasksets' /
-            csv_filename
+            self.JITTER
         )
 
-        # Check if file exists
-        if not csv_path.exists():
-            raise FileNotFoundError(
-                f"Task set file not found: {csv_path}\n"
-                f"Parameters: distribution='{distribution}', "
-                f"util_level={util_level}, csv_identifier={csv_identifier}"
-            )
+        tasksets_dir = base_dir / util_folder / 'tasksets'
 
-        # Load and return the DataFrame
+        # Prefer exact filename if present, otherwise try to find any csv in the folder
+        csv_path = tasksets_dir / csv_filename
+
         df = pd.read_csv(csv_path)
 
-        # Add metadata as attributes
         df.attrs['distribution'] = distribution
         df.attrs['util_level'] = util_level
         df.attrs['csv_identifier'] = csv_identifier
         df.attrs['file_path'] = str(csv_path)
 
-        #rename columns to standard names
         df.rename(columns={
             'BCET': 'C_i_j_min',
             'WCET': 'C_i_j',
@@ -98,8 +66,20 @@ class TaskSetParser:
         if 'task_id' not in df.columns:
             df.insert(0, 'task_id', range(1, len(df) + 1))
 
-        # Use C_i_j for C_i if C_i doesn't exist
-        if 'C_i' not in df.columns and 'C_i_j' in df.columns:
-            df['C_i'] = df['C_i_j']
-
         return df
+    
+
+if __name__ == '__main__':
+    parser = TaskSetParser()
+
+    util = 0.20
+    distribution = 'automotive'
+    distribution = 'uunifast'
+
+    df = parser.parse(distribution, util, 1)
+    print(df.head())
+
+    # Add T_i and D_i of first row
+    print(f"T_i: {df.loc[0, 'T_i']}, D_i: {df.loc[0, 'D_i']}: {df.loc[0, 'T_i'] + df.loc[0, 'D_i']}")
+
+    
