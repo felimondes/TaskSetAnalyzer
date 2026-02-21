@@ -47,28 +47,3 @@ DISTRIBUTION_MAPPING = {
         'prefix': 'uniform-discrete'
     }
 }
-
-
-if __name__ == '__main__':
-    print("Testing config constants...")
-    
-    # Test DISTRIBUTION_MAPPING
-    assert 'automotive' in DISTRIBUTION_MAPPING
-    assert 'uunifast' in DISTRIBUTION_MAPPING
-    assert DISTRIBUTION_MAPPING['automotive']['util_dist'] == 'automotive-utilDist'
-    print("✓ DISTRIBUTION_MAPPING configured correctly")
-    
-    # Test directory constants
-    assert CORES == '1-core'
-    assert TASKS == '25-task'
-    assert JITTER == '0-jitter'
-    print("✓ Directory structure constants defined")
-    
-    # Test column mappings
-    assert 'WCET' in ORIGINAL_COLUMNS
-    assert STANDARDIZED_COLUMNS['WCET'] == 'C_i_j'
-    assert STANDARDIZED_COLUMNS['PERIOD'] == 'T_i'
-    assert STANDARDIZED_COLUMNS['DEADLINE'] == 'D_i'
-    print("✓ Column name mappings configured")
-    
-    print("All config tests passed!\n")

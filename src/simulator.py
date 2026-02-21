@@ -12,6 +12,7 @@ class Simulator:
         self._initialize(task_set, scheduler, wcet)
         self._run()
         return self._calculate_metrics(task_set)
+    
     def _initialize(self, task_set: pd.DataFrame, scheduler: Any, wcet: bool) -> None:
         self.wcet = wcet
         self.scheduler = scheduler
@@ -103,6 +104,9 @@ class Simulator:
             'schedulable_analysis': schedulable_analysis,
             'schedulable_simulator': (num_late_tasks == 0, num_late_tasks, max_lateness),
         }
+
+
+#Helpers 
     def _execute_job(self, job: Job, time_units: int) -> None:
         #If no jobs executing
         if not self.job_in_execution:
@@ -125,28 +129,13 @@ class Simulator:
             self.job_in_execution.isExecuting = False
             self.job_in_execution = None
 
-
-    def _add_to_activation_times_by_task(self, job: Job, activation_times_by_task: Dict[str, List]) -> None:
-        activation_times_by_task.setdefault(job.task_id, []).append((job.job_id, job.a))
-
-    def _add_to_completion_times_by_task(self, job: Job, completion_times_by_task: Dict[str, List]) -> None:
-        completion_times_by_task.setdefault(job.task_id, []).append((job.job_id, job.f))
-
-    def _add_to_response_times(self, job: Job, job_response_times_by_task: Dict[str, List]) -> None:
-        job_response_times_by_task.setdefault(job.task_id, []).append((job.job_id, job.response_time))
-
-    def _add_to_lateness_by_task(self, job: Job, job_lateness_by_task: Dict[str, List]) -> None:
-        job_lateness_by_task.setdefault(job.task_id, []).append((job.job_id, job.lateness))
-
     def _has_pending_events(self) -> bool:
         return self.arrival_idx < len(self.sorted_arrival_times) or bool(self.active_jobs)
-
     def _calculate_time_until_next_event(self) -> int:
         """Time until the next arrival or the end of the hyperperiod."""
         if self._is_more_arrivals():
             return self.sorted_arrival_times[self.arrival_idx] - self.current_time
         return math.inf #there is no event afterwards
-    
     def _determine_execution_time(self, job: Job) -> int:
         """Execution slice length before the next scheduling decision."""
         time_until_next_event = self._calculate_time_until_next_event()
@@ -179,6 +168,16 @@ class Simulator:
                 jobs_arrival_times.setdefault(arrival_time, []).append(job)
 
         return jobs_arrival_times
+    
+    def _add_to_activation_times_by_task(self, job: Job, activation_times_by_task: Dict[str, List]) -> None:
+        activation_times_by_task.setdefault(job.task_id, []).append((job.job_id, job.a))
+    def _add_to_completion_times_by_task(self, job: Job, completion_times_by_task: Dict[str, List]) -> None:
+        completion_times_by_task.setdefault(job.task_id, []).append((job.job_id, job.f))
+    def _add_to_response_times(self, job: Job, job_response_times_by_task: Dict[str, List]) -> None:
+        job_response_times_by_task.setdefault(job.task_id, []).append((job.job_id, job.response_time))
+    def _add_to_lateness_by_task(self, job: Job, job_lateness_by_task: Dict[str, List]) -> None:
+        job_lateness_by_task.setdefault(job.task_id, []).append((job.job_id, job.lateness))
+
     def _get_hyperperiod(self, task_set: pd.DataFrame) -> int:
         """Compute the hyperperiod (LCM of task periods)."""
         periods = [int(p) for p in task_set['T_i'].tolist()]
