@@ -1,43 +1,52 @@
 import pandas as pd
+from typing import Optional
+
 
 class Job:
-    def __init__(self, tasktype: pd.Series, activation):
+    """Represents a single job (release) of a periodic task.
 
-        self.job_id = f"{tasktype['task_id']}_{activation}"
-        self.task_id = tasktype['task_id']
-        self.T = tasktype['T_i']                    # period
-        D = tasktype['D_i']                         # relative deadline
-        C = tasktype['C_i']                         # execution time (worst case) #TODO Allow for flex execution times in the future
-        self.remaining_time_till_done = int(C)      # time left to execute before job is completed
-        self.d = int(activation + D)                # absolute deadline
-        self.a = activation                         # activation
-        self.s = None                               # start time
-        self.f = None                               # finish time
-        self.completion_time = None                 # time when job completed execution
+    Attributes are intentionally simple and typed so the simulator can
+    inspect and aggregate stats.
+    """
 
-        self.lateness = None                        # lateness
-        self.response_time = None                   # response time
+    def __init__(self, tasktype: pd.Series, activation: int) -> None:
+        self.job_id: str = f"{tasktype['task_id']}_{activation}"
+        self.task_id: str = tasktype['task_id']
 
+        # Task parameters
+        self.T: int = int(tasktype['T_i'])
+        relative_deadline = int(tasktype['D_i'])
+        execution = int(tasktype['C_i'])
 
+        # Dynamic state
+        self.remaining_time_till_done: int = execution
+        self.d: int = activation + relative_deadline  # absolute deadline
+        self.a: int = activation                        # activation time
+        self.s: Optional[int] = None                   # start time
+        self.f: Optional[int] = None                   # finish time
 
-    def is_complete(self):
+        # Derived metrics (filled by simulator)
+        self.lateness: Optional[int] = None
+        self.response_time: Optional[int] = None
+
+    def is_complete(self) -> bool:
         if self.remaining_time_till_done < 0:
-            raise ValueError(f"Job {self.task_id} over-executed by {-self.remaining_time_till_done} time units") #TODO fix why this happens, if it happens at all X)
+            raise ValueError(
+                f"Job {self.task_id} over-executed by {-self.remaining_time_till_done} time units"
+            )
         return self.remaining_time_till_done == 0
 
-   
+    def execute(self, time_units: int) -> None:
+        """Consume `time_units` from the job's remaining execution budget."""
+        self.remaining_time_till_done -= int(time_units)
 
-    def execute(self, time_units):
-        self.remaining_time_till_done -= time_units
- 
- 
-    def set_started(self, start_time):
-            """Mark when a job first starts execution"""
-            if self.s is None:
-                self.s = start_time
-    
-    def is_late(self):
-        """Check if job missed its deadline"""
+    def set_started(self, start_time: int) -> None:
+        """Record the first time the job began execution."""
+        if self.s is None:
+            self.s = int(start_time)
+
+    def is_late(self) -> bool:
+        """Return True if the job finished after its deadline."""
         if self.f is None:
             return False
         return self.f > self.d

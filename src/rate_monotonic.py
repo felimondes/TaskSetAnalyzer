@@ -1,62 +1,62 @@
 from scheduler import PeriodicTaskSetScheduler
 import pandas as pd
-import simulator
+from simulator import Simulator
+
+
 class RateMonotonic(PeriodicTaskSetScheduler):
-    
+    """Rate Monotonic priority scheduler: shorter period == higher priority."""
 
     def select_next_job_from_active(self, active_jobs):
         if not active_jobs:
             return None
-        return min(active_jobs, key=lambda job: job.T) #sort by period, shortest period has highest priority
-    
-    def is_scheduable(self, tasks):
+        return min(active_jobs, key=lambda job: job.T)
+
+    def is_scheduable(self, tasks: pd.DataFrame) -> bool:
         utilization = sum(tasks['C_i'] / tasks['T_i'])
         n = len(tasks)
-        rm_bound = n * (2 ** (1/n) - 1)
+        rm_bound = n * (2 ** (1 / n) - 1)
         return utilization <= rm_bound
-    
-    def get_least_upper_bound(self, n):
-        return n * (2 ** (1/n) - 1)
+
+    def get_least_upper_bound(self, n: int) -> float:
+        return n * (2 ** (1 / n) - 1)
+
 
 if __name__ == "__main__":
-
-    simulator = simulator.Simulator()
+    sim = Simulator()
     rate_monotonic_scheduler = RateMonotonic()
 
-    #Sc
+    # Example 1: schedulable
     task_set = pd.DataFrame({
         'task_id': ['A', 'B'],
         'T_i': [4, 5],
         'D_i': [4, 5],
-        'C_i': [1, 3]
+        'C_i': [1, 3],
     })
 
-
     print(task_set)
-    results = simulator.start(task_set, rate_monotonic_scheduler)
-    print("Job response times by task: " + str(results["job_response_times_by_task"]))
-    print("Activation times by task: " + str(results["activation_times_by_task"]))
-    print("Completion times by task: " + str(results["completion_times_by_task"]))
-    print("Schedulable: " + str(results["schedulable_analysis"]))
-    print("Schedulable according to simulator: " + str(results["schedulable_simulator"]))
+    results = sim.start(task_set, rate_monotonic_scheduler)
+    print("Job response times by task:", results.get("job_response_times_by_task"))
+    print("Activation times by task:", results.get("activation_times_by_task"))
+    print("Completion times by task:", results.get("completion_times_by_task"))
+    print("Schedulable (analysis):", results.get("schedulable_analysis"))
+    print("Schedulable (simulator):", results.get("schedulable_simulator"))
 
 
     print("\n\n\n")
 
-    #Sc
+    # Example 2: not schedulable
     task_set = pd.DataFrame({
         'task_id': ['A', 'B'],
         'T_i': [4, 5],
         'D_i': [4, 5],
-        'C_i': [1, 4]
+        'C_i': [1, 4],
     })
 
-
     print(task_set)
-    results = simulator.start(task_set, rate_monotonic_scheduler)
-    print("Job response times by task: " + str(results["job_response_times_by_task"]))
-    print("Activation times by task: " + str(results["activation_times_by_task"]))
-    print("Completion times by task: " + str(results["completion_times_by_task"]))
-    print("Schedulable: " + str(results["schedulable_analysis"]))
-    print("Schedulable according to simulator: " + str(results["schedulable_simulator"]))
-    print("Hyperperiod: " + str(results["hyperperiod"]))
+    results = sim.start(task_set, rate_monotonic_scheduler)
+    print("Job response times by task:", results.get("job_response_times_by_task"))
+    print("Activation times by task:", results.get("activation_times_by_task"))
+    print("Completion times by task:", results.get("completion_times_by_task"))
+    print("Schedulable (analysis):", results.get("schedulable_analysis"))
+    print("Schedulable (simulator):", results.get("schedulable_simulator"))
+    print("Hyperperiod:", results.get("hyperperiod"))
