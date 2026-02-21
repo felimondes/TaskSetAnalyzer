@@ -28,6 +28,7 @@ class Job:
         # Derived metrics (filled by simulator)
         self.lateness: Optional[int] = None
         self.response_time: Optional[int] = None
+        self.isExecuting: bool = False
 
     def is_complete(self) -> bool:
         if self.remaining_time_till_done < 0:

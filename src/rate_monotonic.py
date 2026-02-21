@@ -6,17 +6,20 @@ from simulator import Simulator
 class RateMonotonic(PeriodicTaskSetScheduler):
     """Rate Monotonic priority scheduler: shorter period == higher priority."""
 
-    def select_next_job_from_active(self, active_jobs):
+    def select_next_job_from_active(self, active_jobs: list):
         if not active_jobs:
             return None
         return min(active_jobs, key=lambda job: job.T)
 
     def is_scheduable(self, tasks: pd.DataFrame) -> bool:
+        #The below is the Liu & Layland bound for RM schedulability
+        #TODO implement hyperbolic bound instead
         utilization = sum(tasks['C_i'] / tasks['T_i'])
         n = len(tasks)
         rm_bound = n * (2 ** (1 / n) - 1)
         return utilization <= rm_bound
-
+    
+    
     def get_least_upper_bound(self, n: int) -> float:
         return n * (2 ** (1 / n) - 1)
 

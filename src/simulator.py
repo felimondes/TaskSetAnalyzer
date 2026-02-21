@@ -14,7 +14,6 @@ class Simulator:
         return self._calculate_metrics(task_set)
 
     def _initialize(self, task_set: pd.DataFrame, scheduler: Any) -> None:
-       
         self.scheduler = scheduler
         self.hyperperiod: int = self._get_hyperperiod(task_set)
 
@@ -26,6 +25,7 @@ class Simulator:
 
         self.current_time: int = 0
         self.arrival_idx: int = 0
+        self.job_in_execution: Optional[Job] = None
 
     def _run(self) -> None:
         while self._has_pending_events():
@@ -36,16 +36,17 @@ class Simulator:
             if job is None:
                 self._advance_to_next_arrival()
                 continue
-
+            
             if job.s is None:
                 job.set_started(self.current_time)
 
             execution_time = self._determine_execution_time(job)
-            job.execute(execution_time)
+            self._execute_job(job, execution_time)
 
             self.current_time += execution_time
 
             if job.is_complete():
+                self._remove_executing_job()
                 job.f = self.current_time
                 job.response_time = job.f - job.a
                 job.lateness = job.f - job.d
@@ -109,6 +110,28 @@ class Simulator:
             'schedulable_analysis': schedulable_analysis,
             'schedulable_simulator': (num_late_tasks == 0, num_late_tasks, max_lateness),
         }
+    def _execute_job(self, job: Job, time_units: int) -> None:
+        #If no jobs executing
+        if not self.job_in_execution:
+            job.execute(time_units)
+            job.isExecuting = True
+            self.job_in_execution = job
+        
+        #If the same job is executing, continue executing it
+        elif self.job_in_execution == job:
+            job.execute(time_units)
+        
+        #If a different job is executing, preempt it and start executing the new job
+        else:
+            self._remove_executing_job()
+            job.execute(time_units)
+            job.isExecuting = True
+            self.job_in_execution = job
+    def _remove_executing_job(self) -> None:
+        if self.job_in_execution:
+            self.job_in_execution.isExecuting = False
+            self.job_in_execution = None
+
 
     def _add_to_activation_times_by_task(self, job: Job, activation_times_by_task: Dict[str, List]) -> None:
         activation_times_by_task.setdefault(job.task_id, []).append((job.job_id, job.a))
