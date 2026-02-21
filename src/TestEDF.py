@@ -18,7 +18,7 @@ class TestEDF(unittest.TestCase):
             'C_i': [1, 3],
         })
 
-        results = self.sim.start(task_set, self.scheduler)
+        results = self.sim.start(task_set, self.scheduler, True)
 
         expected_response = {
             'A': [('A_0', 1), ('A_4', 1), ('A_8', 1), ('A_12', 2), ('A_16', 3)],
@@ -50,7 +50,7 @@ class TestEDF(unittest.TestCase):
             'C_i': [1, 4],
         })
 
-        results = self.sim.start(task_set, self.scheduler)
+        results = self.sim.start(task_set, self.scheduler, True)
 
         expected_response = {
             'A': [('A_0', 1), ('A_4', 2), ('A_8', 3), ('A_12', 4), ('A_16', 1)],

@@ -18,7 +18,7 @@ class TestRateMonotonic(unittest.TestCase):
             'C_i': [1, 3],
         })
 
-        results = self.sim.start(task_set, self.scheduler)
+        results = self.sim.start(task_set, self.scheduler, True)
 
         expected_response = {
             'A': [('A_0', 1), ('A_4', 1), ('A_8', 1), ('A_12', 1), ('A_16', 1)],
@@ -46,7 +46,7 @@ class TestRateMonotonic(unittest.TestCase):
             'C_i': [1, 4],
         })
 
-        results = self.sim.start(task_set, self.scheduler)
+        results = self.sim.start(task_set, self.scheduler, True)
 
         expected_response = {
             'A': [('A_0', 1), ('A_4', 1), ('A_8', 1), ('A_12', 1), ('A_16', 1)],

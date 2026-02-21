@@ -8,12 +8,12 @@ from job import Job
 
 class Simulator:
  
-    def start(self, task_set: pd.DataFrame, scheduler: Any) -> Dict[str, Any]:
-        self._initialize(task_set, scheduler)
+    def start(self, task_set: pd.DataFrame, scheduler: Any, wcet: bool) -> Dict[str, Any]:
+        self._initialize(task_set, scheduler, wcet)
         self._run()
         return self._calculate_metrics(task_set)
-
-    def _initialize(self, task_set: pd.DataFrame, scheduler: Any) -> None:
+    def _initialize(self, task_set: pd.DataFrame, scheduler: Any, wcet: bool) -> None:
+        self.wcet = wcet
         self.scheduler = scheduler
         self.hyperperiod: int = self._get_hyperperiod(task_set)
 
@@ -26,7 +26,6 @@ class Simulator:
         self.current_time: int = 0
         self.arrival_idx: int = 0
         self.job_in_execution: Optional[Job] = None
-
     def _run(self) -> None:
         while self._has_pending_events():
             self._activate_newly_arrived_jobs()
@@ -54,7 +53,6 @@ class Simulator:
                 self.active_jobs.remove(job)
 
             self._update_arrival_index()
-
     def _calculate_metrics(self, task_set: pd.DataFrame) -> Dict[str, Any]:
         """Aggregate per-job and per-task statistics for the run."""
         job_response_times_by_task: Dict[str, List] = {}
@@ -77,6 +75,7 @@ class Simulator:
         num_late_tasks = sum(1 for job in self.completed_jobs if job.is_late())
         lateness_values = [job.lateness for job in self.completed_jobs if job.lateness is not None]
         max_lateness = max(lateness_values) if lateness_values else 0
+
         average_response_time = (sum_response_times / len(self.completed_jobs)) if self.completed_jobs else 0
 
         # jobs_of_each_type: count total jobs per task_id across all arrival times
@@ -85,16 +84,10 @@ class Simulator:
             for j in jobs:
                 jobs_of_each_type[j.task_id] = jobs_of_each_type.get(j.task_id, 0) + 1
 
-        # Schedulability analysis hooks (scheduler may expose these methods)
         schedulable_analysis = None
-        try:
-            schedulable_analysis = (
-                self.scheduler.is_scheduable(task_set),
-                self.scheduler.get_least_upper_bound(len(task_set)),
-                self.scheduler.get_utilization(task_set),
-            )
-        except Exception:
-            schedulable_analysis = (None, None, None)
+        self.scheduler.is_scheduable(task_set),
+        self.scheduler.get_least_upper_bound(len(task_set)),
+        self.scheduler.get_utilization(task_set)
 
         return {
             'average_response_time': average_response_time,
@@ -152,7 +145,8 @@ class Simulator:
         """Time until the next arrival or the end of the hyperperiod."""
         if self._is_more_arrivals():
             return self.sorted_arrival_times[self.arrival_idx] - self.current_time
-        return self.hyperperiod - self.current_time
+        return math.inf #there is no event afterwards
+    
     def _determine_execution_time(self, job: Job) -> int:
         """Execution slice length before the next scheduling decision."""
         time_until_next_event = self._calculate_time_until_next_event()
@@ -181,7 +175,7 @@ class Simulator:
             num_jobs = self._get_num_jobs_for_task(task_type, hyperperiod)
             for i in range(num_jobs):
                 arrival_time = int(i * task_type['T_i'])
-                job = Job(task_type, arrival_time)
+                job = Job(task_type, arrival_time, self.wcet)
                 jobs_arrival_times.setdefault(arrival_time, []).append(job)
 
         return jobs_arrival_times

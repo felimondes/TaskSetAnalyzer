@@ -9,26 +9,34 @@ class Job:
     inspect and aggregate stats.
     """
 
-    def __init__(self, tasktype: pd.Series, activation: int) -> None:
+    def __init__(self, tasktype: pd.Series, activation: int, wcet: bool) -> None:
         self.job_id: str = f"{tasktype['task_id']}_{activation}"
         self.task_id: str = tasktype['task_id']
 
         # Task parameters
         self.T: int = int(tasktype['T_i'])
         relative_deadline = int(tasktype['D_i'])
-        execution = int(tasktype['C_i'])
+        execution_time = self._calculate_execution_time(tasktype, wcet) 
 
         # Dynamic state
-        self.remaining_time_till_done: int = execution
+        self.remaining_time_till_done: int = execution_time
         self.d: int = activation + relative_deadline  # absolute deadline
-        self.a: int = activation                        # activation time
-        self.s: Optional[int] = None                   # start time
-        self.f: Optional[int] = None                   # finish time
+        self.a: int = activation                      # activation time
+        self.s: Optional[int] = None                  # start time
+        self.f: Optional[int] = None                  # finish time
 
         # Derived metrics (filled by simulator)
         self.lateness: Optional[int] = None
         self.response_time: Optional[int] = None
         self.isExecuting: bool = False
+
+    def _calculate_execution_time(self, tasktype: pd.Series, wcet: bool):
+        if not wcet and "C_i_min" in tasktype:
+                from random import randrange
+                return randrange(tasktype["C_i_min"], tasktype['C_i']+1)
+        else:
+            return tasktype["C_i"]
+            
 
     def is_complete(self) -> bool:
         if self.remaining_time_till_done < 0:

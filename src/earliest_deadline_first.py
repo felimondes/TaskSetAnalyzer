@@ -25,8 +25,8 @@ class EDF(PeriodicTaskSetScheduler):
         # If no job is executing, return the one with shortest period (like in RM)
         return min(jobs_with_earliest_deadline, key=lambda job: job.T)
     
-    def is_scheduable(self):
-        utilization = sum(self.tasks['C_i'] / self.tasks['T_i'])
+    def is_scheduable(self, tasks):
+        utilization = sum(tasks['C_i'] / tasks['T_i'])
         return utilization <= 1.0
     
     def get_least_upper_bound(self, n: int) -> float:
@@ -37,34 +37,35 @@ if __name__ == '__main__':
     sim = Simulator()
     edf = EDF()
 
-    # Example 1: schedulable
+    # # Example 1: schedulable
+    # task_set = pd.DataFrame({
+    #     'task_id': ['A', 'B'],
+    #     'T_i': [4, 5],
+    #     'D_i': [4, 5],
+    #     'C_i': [1, 3],
+    # })
+
+    # print(task_set)
+    # results = sim.start(task_set, edf, True)
+    # print("Job response times by task:", results.get("job_response_times_by_task"))
+    # print("Activation times by task:", results.get("activation_times_by_task"))
+    # print("Completion times by task:", results.get("completion_times_by_task"))
+    # print("Schedulable (analysis):", results.get("schedulable_analysis"))
+    # print("Schedulable (simulator):", results.get("schedulable_simulator"))
+
+
+    # print("\n\n\n")
+
     task_set = pd.DataFrame({
         'task_id': ['A', 'B'],
         'T_i': [4, 5],
         'D_i': [4, 5],
-        'C_i': [1, 3],
+        'C_i': [1, 5],
+        'C_i_min': [1,3]
     })
 
     print(task_set)
-    results = sim.start(task_set, edf)
-    print("Job response times by task:", results.get("job_response_times_by_task"))
-    print("Activation times by task:", results.get("activation_times_by_task"))
-    print("Completion times by task:", results.get("completion_times_by_task"))
-    print("Schedulable (analysis):", results.get("schedulable_analysis"))
-    print("Schedulable (simulator):", results.get("schedulable_simulator"))
-
-
-    print("\n\n\n")
-
-    task_set = pd.DataFrame({
-        'task_id': ['A', 'B'],
-        'T_i': [4, 5],
-        'D_i': [4, 5],
-        'C_i': [1, 4],
-    })
-
-    print(task_set)
-    results = sim.start(task_set, edf)
+    results = sim.start(task_set, edf, False)
     print("Job response times by task:", results.get("job_response_times_by_task"))
     print("Activation times by task:", results.get("activation_times_by_task"))
     print("Completion times by task:", results.get("completion_times_by_task"))
