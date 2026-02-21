@@ -27,7 +27,7 @@ try:
     import pandas as pd
     from job import Job
     task_series = pd.Series({'task_id': 1, 'C_i': 5, 'T_i': 10, 'D_i': 10})
-    job = Job(task_series, arrival_time=0)
+    job = Job(task_series, activation=0)
     assert job.C == 5
     print("✓ job.py tests passed")
 except Exception as e:
@@ -72,7 +72,7 @@ try:
     })
     edf = EDF()
     edf.set_tasks(task_set)
-    assert edf.is_schedulable() == True
+    assert edf.is_scheduable() == True
     print("✓ earliest_deadline_first.py tests passed")
 except Exception as e:
     print(f"✗ earliest_deadline_first.py tests failed: {e}")
@@ -90,7 +90,7 @@ try:
     })
     rm = RateMonotonic()
     rm.set_tasks(task_set)
-    result = rm.is_schedulable()
+    result = rm.is_scheduable()
     assert isinstance(result, bool)
     print("✓ rate_monotonic.py tests passed")
 except Exception as e:
@@ -100,7 +100,7 @@ except Exception as e:
 print("\n[7/8] Testing simulator.py...")
 try:
     import pandas as pd
-    from simulator import SchedulingSimulator
+    from simulator import Simulator
     from earliest_deadline_first import EDF
     task_set = pd.DataFrame({
         'task_id': [1, 2],
@@ -109,8 +109,8 @@ try:
         'D_i': [4, 5]
     })
     edf = EDF()
-    sim = SchedulingSimulator()
-    results = sim.run(task_set, edf)
+    sim = Simulator()
+    results = sim.start(task_set, edf)
     assert 'completed_jobs' in results
     assert 'metrics' in results
     print("✓ simulator.py tests passed")

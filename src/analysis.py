@@ -109,8 +109,8 @@ if __name__ == '__main__':
     jobs = []
     for i in range(1, 4):
         task = pd.Series({'task_id': i, 'C_i': 1, 'T_i': 10, 'D_i': 10})
-        job = Job(task, arrival_time=0)
-        job.completion_time = 5 + i * 2  # vary completion times
+        job = Job(task, activation=0)
+        job.f = 5 + i * 2  # vary completion times
         jobs.append(job)
     
     wcrts = compute_wcrts_from_completed_jobs(jobs)

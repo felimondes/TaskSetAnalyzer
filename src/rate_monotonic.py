@@ -1,52 +1,62 @@
 from scheduler import PeriodicTaskSetScheduler
-
-
+import pandas as pd
+import simulator
 class RateMonotonic(PeriodicTaskSetScheduler):
     
 
-    def select_next_job_from_active(self):
-        return min(self.active_jobs, key=lambda job: job.T)
+    def select_next_job_from_active(self, active_jobs):
+        if not active_jobs:
+            return None
+        return min(active_jobs, key=lambda job: job.T) #sort by period, shortest period has highest priority
     
-    def is_schedulable(self):
-        utilization = sum(self.tasks['C_i'] / self.tasks['T_i'])
-        n = len(self.tasks)
+    def is_scheduable(self, tasks):
+        utilization = sum(tasks['C_i'] / tasks['T_i'])
+        n = len(tasks)
         rm_bound = n * (2 ** (1/n) - 1)
         return utilization <= rm_bound
-
-
-if __name__ == '__main__':
-    import pandas as pd
-    from simulator import SchedulingSimulator
-    print("Testing Rate Monotonic scheduler...")
     
-    # Create a sample task set
+    def get_least_upper_bound(self, n):
+        return n * (2 ** (1/n) - 1)
+
+if __name__ == "__main__":
+
+    simulator = simulator.Simulator()
+    rate_monotonic_scheduler = RateMonotonic()
+
+    #Sc
     task_set = pd.DataFrame({
-        'task_id': [1, 2],
-        'C_i': [1, 2],
-        'T_i': [4, 6],
-        'D_i': [4, 6]
+        'task_id': ['A', 'B'],
+        'T_i': [4, 5],
+        'D_i': [4, 5],
+        'C_i': [1, 3]
     })
-    
-    # Test priority ordering (lower period = higher priority)
-    rm = RateMonotonic()
-    rm.set_tasks(task_set)
-    assert len(rm.tasks) == 2
-    print("✓ RM task set loaded")
-    
-    # Test schedulability using RM bound
-    is_sched = rm.is_schedulable()
-    utilization = sum(task_set['C_i'] / task_set['T_i'])
-    n = len(task_set)
-    rm_bound = n * (2 ** (1/n) - 1)
-    expected = utilization <= rm_bound
-    assert is_sched == expected
-    print(f"✓ RM schedulability test (util={utilization:.2f}, bound={rm_bound:.2f})")
-    
-    # Test simulation
-    sim = SchedulingSimulator()
-    results = sim.run(task_set, rm)
-    assert len(results['completed_jobs']) > 0
-    print(f"✓ RM simulation completed {len(results['completed_jobs'])} jobs")
-    
-    print("All Rate Monotonic tests passed!\n")
 
+
+    print(task_set)
+    results = simulator.start(task_set, rate_monotonic_scheduler)
+    print("Job response times by task: " + str(results["job_response_times_by_task"]))
+    print("Activation times by task: " + str(results["activation_times_by_task"]))
+    print("Completion times by task: " + str(results["completion_times_by_task"]))
+    print("Schedulable: " + str(results["schedulable_analysis"]))
+    print("Schedulable according to simulator: " + str(results["schedulable_simulator"]))
+
+
+    print("\n\n\n")
+
+    #Sc
+    task_set = pd.DataFrame({
+        'task_id': ['A', 'B'],
+        'T_i': [4, 5],
+        'D_i': [4, 5],
+        'C_i': [1, 4]
+    })
+
+
+    print(task_set)
+    results = simulator.start(task_set, rate_monotonic_scheduler)
+    print("Job response times by task: " + str(results["job_response_times_by_task"]))
+    print("Activation times by task: " + str(results["activation_times_by_task"]))
+    print("Completion times by task: " + str(results["completion_times_by_task"]))
+    print("Schedulable: " + str(results["schedulable_analysis"]))
+    print("Schedulable according to simulator: " + str(results["schedulable_simulator"]))
+    print("Hyperperiod: " + str(results["hyperperiod"]))

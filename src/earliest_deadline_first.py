@@ -6,14 +6,14 @@ class EDF(PeriodicTaskSetScheduler):
     def select_next_job_from_active(self):
         return min(self.active_jobs, key=lambda job: job.absolute_deadline)
     
-    def is_schedulable(self):
+    def is_scheduable(self):
         utilization = sum(self.tasks['C_i'] / self.tasks['T_i'])
         return utilization <= 1.0
 
 
 if __name__ == '__main__':
     import pandas as pd
-    from simulator import SchedulingSimulator
+    from simulator import Simulator
     print("Testing EDF scheduler...")
     
     # Create a sample task set
@@ -27,12 +27,12 @@ if __name__ == '__main__':
     # Test schedulability
     edf = EDF()
     edf.set_tasks(task_set)
-    assert edf.is_schedulable() == True
+    assert edf.is_scheduable() == True
     print("✓ EDF schedulability test (utilization <= 1.0)")
     
     # Test job selection (EDF: earliest deadline first)
-    sim = SchedulingSimulator()
-    results = sim.run(task_set, edf)
+    sim = Simulator()
+    results = sim.start(task_set, edf)
     assert results['schedulable'] == True
     assert len(results['completed_jobs']) > 0
     print(f"✓ EDF simulation completed {len(results['completed_jobs'])} jobs")
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     })
     edf_ol = EDF()
     edf_ol.set_tasks(task_set_overloaded)
-    assert edf_ol.is_schedulable() == False
+    assert edf_ol.is_scheduable() == False
     print("✓ EDF correctly identifies unschedulable task set (utilization > 1.0)")
     
     print("All EDF tests passed!\n")

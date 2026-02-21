@@ -1,5 +1,5 @@
 from job import Job
-from simulator import SchedulingSimulator
+from simulator import Simulator
 from task_set_parser import TaskSetParser
 from earliest_deadline_first import EDF
 from rate_monotonic import RateMonotonic
@@ -12,7 +12,7 @@ from analysis import edf_processor_demand_test, compute_wcrts_from_completed_job
 
 def run_single_task_set(task_set, scheduler_name):
     """Run simulation on a single task set with specified scheduler"""
-    simulator = SchedulingSimulator()
+    simulator = Simulator()
     
     if scheduler_name.lower() == 'edf':
         scheduler = EDF()
@@ -21,7 +21,7 @@ def run_single_task_set(task_set, scheduler_name):
     else:
         raise ValueError(f"Unknown scheduler: {scheduler_name}")
     
-    results = simulator.run(task_set, scheduler)
+    results = simulator.start(task_set, scheduler)
     return results
 
 def run_multiple_task_sets(distribution, util_min, util_max, step=0.10):
