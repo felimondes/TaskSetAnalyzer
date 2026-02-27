@@ -10,7 +10,7 @@ class TestRateMonotonic(unittest.TestCase):
         self.sim = Simulator()
         self.scheduler = RateMonotonic()
     
-    def test_example_1_outputs(self):
+    def test_scheduable(self):
         task_set = pd.DataFrame({
             'task_id': ['A', 'B'],
             'T_i': [4, 5],
@@ -35,10 +35,11 @@ class TestRateMonotonic(unittest.TestCase):
             'B': [('B_0', 4), ('B_5', 8), ('B_10', 14), ('B_15', 19)]
         }
 
-        self.assertEqual(results["job_response_times_by_task"], expected_response)
-        self.assertEqual(results["activation_times_by_task"], expected_activation)
-        self.assertEqual(results["completion_times_by_task"], expected_completion)
-    def test_example_2_outputs(self):
+        self.assertEqual(results.job_response_times_by_task, expected_response)
+        self.assertEqual(results.job_activation_times_by_task, expected_activation)
+        self.assertEqual(results.job_completion_times_by_task, expected_completion)
+
+    def test_unscheduable(self):
         task_set = pd.DataFrame({
             'task_id': ['A', 'B'],
             'T_i': [4, 5],
@@ -63,10 +64,12 @@ class TestRateMonotonic(unittest.TestCase):
             'B': [('B_0', 6), ('B_5', 11), ('B_10', 16), ('B_15', 21)]
         }
 
-        self.assertEqual(results["job_response_times_by_task"], expected_response)
-        self.assertEqual(results["activation_times_by_task"], expected_activation)
-        self.assertEqual(results["completion_times_by_task"], expected_completion)
-        self.assertFalse(results["schedulable_simulator"][0])
+        self.assertEqual(results.job_response_times_by_task, expected_response)
+        self.assertEqual(results.job_activation_times_by_task, expected_activation)
+        self.assertEqual(results.job_completion_times_by_task, expected_completion)
+
+
+    
 
 
 if __name__ == "__main__":

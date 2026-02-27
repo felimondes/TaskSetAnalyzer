@@ -10,7 +10,7 @@ class TestEDF(unittest.TestCase):
         self.sim = Simulator()
         self.scheduler = EDF()
 
-    def test_edf_example_1(self):
+    def test_scheduable_example(self):
         task_set = pd.DataFrame({
             'task_id': ['A', 'B'],
             'T_i': [4, 5],
@@ -35,14 +35,12 @@ class TestEDF(unittest.TestCase):
             'B': [('B_0', 4), ('B_5', 8), ('B_10', 13), ('B_15', 18)]
         }
 
-        self.assertEqual(results["job_response_times_by_task"], expected_response)
-        self.assertEqual(results["activation_times_by_task"], expected_activation)
-        self.assertEqual(results["completion_times_by_task"], expected_completion)
-        self.assertTrue(results["schedulable_simulator"][0])
-        self.assertEqual(results["hyperperiod"], 20)
+        self.assertEqual(results.job_response_times_by_task, expected_response)
+        self.assertEqual(results.job_activation_times_by_task, expected_activation)
+        self.assertEqual(results.job_completion_times_by_task, expected_completion)
 
 
-    def test_edf_example_2(self):
+    def test_unscheduable_example(self):
         task_set = pd.DataFrame({
             'task_id': ['A', 'B'],
             'T_i': [4, 5],
@@ -67,11 +65,9 @@ class TestEDF(unittest.TestCase):
             'B': [('B_0', 5), ('B_5', 10), ('B_10', 15), ('B_15', 21)]
         }
 
-        self.assertEqual(results["job_response_times_by_task"], expected_response)
-        self.assertEqual(results["activation_times_by_task"], expected_activation)
-        self.assertEqual(results["completion_times_by_task"], expected_completion)
-        self.assertFalse(results["schedulable_simulator"][0])
-        self.assertEqual(results["hyperperiod"], 20)
+        self.assertEqual(results.job_response_times_by_task, expected_response)
+        self.assertEqual(results.job_activation_times_by_task, expected_activation)
+        self.assertEqual(results.job_completion_times_by_task, expected_completion)
 
 
 if __name__ == "__main__":

@@ -29,12 +29,8 @@ class EDF(PeriodicTaskSetScheduler):
         utilization = sum(tasks['C_i'] / tasks['T_i'])
         return utilization <= 1.0
     
-    def get_least_upper_bound(self, n: int) -> float:
+    def get_least_upper_bound(self, tasks: pd.DataFrame) -> float:
         return 1.0
     
-
-    # print("\n\n\n")
-
-    
-
-
+    def __str__(self):
+        return f"EDF"

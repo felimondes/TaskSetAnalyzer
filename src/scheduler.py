@@ -8,7 +8,6 @@ from job import Job
 
 class PeriodicTaskSetScheduler(ABC):
     """Abstract class for periodic task-set schedulers.
-
     """
 
     @abstractmethod
@@ -22,7 +21,7 @@ class PeriodicTaskSetScheduler(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def get_least_upper_bound(self, n: int) -> float:
+    def get_least_upper_bound(self, tasks: pd.DataFrame) -> float:
         """Return the analytic least upper bound on utilization for `n` tasks."""
         raise NotImplementedError()
 

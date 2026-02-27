@@ -12,13 +12,15 @@ class RateMonotonic(PeriodicTaskSetScheduler):
         return min(active_jobs, key=lambda job: job.T)
 
     def is_scheduable(self, tasks: pd.DataFrame) -> bool:
-        #The below is the Liu & Layland bound for RM schedulability
-        #TODO implement hyperbolic bound instead
-        utilization = sum(tasks['C_i'] / tasks['T_i'])
-        n = len(tasks)
-        rm_bound = n * (2 ** (1 / n) - 1)
-        return utilization <= rm_bound
+        hyperbolic_product = self.get_least_upper_bound(tasks)
+        return hyperbolic_product <= 2
     
+    def get_least_upper_bound(self, tasks: pd.DataFrame) -> float:
+        utilizations = tasks['C_i'] / tasks['T_i']
+        hyperbolic_product = 1.0
+        for u in utilizations:
+            hyperbolic_product *= (u + 1)
+        return hyperbolic_product
     
-    def get_least_upper_bound(self, n: int) -> float:
-        return n * (2 ** (1 / n) - 1)
+    def __str__(self):
+        return f"RateMonotonic"

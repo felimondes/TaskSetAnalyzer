@@ -8,19 +8,15 @@ class Parser:
 
         
     def taskSetParser(self, path: str) -> pd.DataFrame:
-            
             csvs = self._find_all_csvs_from_folder_relative_path(path)
             dfs = []
             for csv in csvs:
-                print(csv)
                 df = pd.read_csv(csv)
                 self._rename_headers(df)
-
                 p = Path(csv)
                 last_two = Path(*p.parts[-1:])
-                df["csv"] = str(last_two)
+                df["csv_id"] = str(last_two)
                 dfs.append(df)
-                
             return dfs
     
     def _find_all_csvs_from_folder_relative_path(self, relative_path: str) -> list[str]:
@@ -41,8 +37,9 @@ class Parser:
             'Deadline': 'D_i',
         }, inplace=True)
 
-        if 'task_id' not in df.columns:
-            df.insert(0, 'task_id', range(1, len(df) + 1))
+        df.insert(0, 'task_id', range(1, len(df) + 1))
+        
+
         return df
 
 if __name__ == '__main__':
