@@ -1,39 +1,37 @@
-from job import Job
 from simulator import Simulator
-from task_set_parser import TaskSetParser
+from parser import Parser
 from earliest_deadline_first import EDF
 from rate_monotonic import RateMonotonic
-import csv
-import os
-from pathlib import Path
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from parser import Parser
 
-if __name__ == '__main__':
-    sim = Simulator()
-    edf = EDF()
+sim = Simulator()
+edf = EDF()
+rm = RateMonotonic()
+parser = Parser()
 
-    task_set = pd.DataFrame({
-        'task_id': ['A', 'B'],
-        'T_i': [4, 5],
-        'D_i': [4, 5],
-        'C_i': [1, 5],
-        'C_i_min': [1,3]
-    })
+def run_simulations(dfs):
+    for df in dfs: 
+        wcet = True
+        results = sim.start(df, edf, wcet)
+        result = results.get("schedulable_analysis")
+        print(f"scheudable? {result[0]}")
 
-    wcet = False
-    results = sim.start(task_set, edf, wcet)
+def main():
+
+    not_sched = "easy_examples\\not_schedulable"
+    sched = "easy_examples\schedulable"
+    folders = [not_sched]
     
-    print(task_set)
-    print("Job response times by task:", results.get("job_response_times_by_task"))
-    print("Activation times by task:", results.get("activation_times_by_task"))
-    print("Completion times by task:", results.get("completion_times_by_task"))
-    print("Schedulable (analysis):", results.get("schedulable_analysis"))
-    print("Schedulable (simulator):", results.get("schedulable_simulator"))
-    print("Hyperperiod:", results.get("hyperperiod"))
-    print("...")
-    print("and more")
+    for folder in folders:
+        dfs = parser.taskSetParser(folder)
+        run_simulations(dfs)
+        
+if __name__ == '__main__':
+    main()
+
+    
 
     
 

@@ -31,12 +31,13 @@ class Job:
         self.isExecuting: bool = False
 
     def _calculate_execution_time(self, tasktype: pd.Series, wcet: bool):
-        if not wcet and "C_i_min" in tasktype:
-                from random import randrange
-                return randrange(tasktype["C_i_min"], tasktype['C_i']+1)
-        else:
+        if wcet:
             return tasktype["C_i"]
-            
+        elif "C_i_min" in tasktype:
+            from random import randrange
+            return randrange(tasktype["C_i_min"], tasktype['C_i']+1)
+        else:
+            raise ValueError("calculation of execution_time not working")
 
     def is_complete(self) -> bool:
         if self.remaining_time_till_done < 0:

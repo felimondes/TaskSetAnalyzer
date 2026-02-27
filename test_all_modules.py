@@ -53,8 +53,8 @@ except Exception as e:
 # Test task_set_parser
 print("\n[4/8] Testing task_set_parser.py...")
 try:
-    from task_set_parser import TaskSetParser
-    parser = TaskSetParser()
+    from parser import Parser
+    parser = Parser()
     print("✓ task_set_parser.py tests passed (initialization)")
 except Exception as e:
     print(f"✗ task_set_parser.py tests failed: {e}")

@@ -44,7 +44,6 @@ class Simulator:
             self._execute_job(job, execution_time)
 
             self.current_time += execution_time
-
             if job.is_complete():
                 self._remove_executing_job()
                 job.f = self.current_time
@@ -86,9 +85,9 @@ class Simulator:
                 jobs_of_each_type[j.task_id] = jobs_of_each_type.get(j.task_id, 0) + 1
 
         schedulable_analysis = None
-        self.scheduler.is_scheduable(task_set),
-        self.scheduler.get_least_upper_bound(len(task_set)),
-        self.scheduler.get_utilization(task_set)
+        is_scheduable = self.scheduler.is_scheduable(task_set),
+        lub = self.scheduler.get_least_upper_bound(len(task_set)),
+        util = self.scheduler.get_utilization(task_set)
 
         return {
             'average_response_time': average_response_time,
@@ -101,7 +100,7 @@ class Simulator:
             'jobs_of_each_type': jobs_of_each_type,
             'activation_times_by_task': activation_times_by_task,
             'completion_times_by_task': completion_times_by_task,
-            'schedulable_analysis': schedulable_analysis,
+            'schedulable_analysis': (is_scheduable, lub, util),
             'schedulable_simulator': (num_late_tasks == 0, num_late_tasks, max_lateness),
         }
 
@@ -182,6 +181,7 @@ class Simulator:
         """Compute the hyperperiod (LCM of task periods)."""
         periods = [int(p) for p in task_set['T_i'].tolist()]
         hyperperiod = math.lcm(*periods)
+        print(hyperperiod)
         return int(hyperperiod)
     def _get_num_jobs_for_task(self, task_type: pd.Series, hyperperiod: int) -> int:
         return hyperperiod // task_type['T_i']
