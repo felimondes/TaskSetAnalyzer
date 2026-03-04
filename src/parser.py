@@ -1,11 +1,29 @@
 import pandas as pd
 from pathlib import Path
 from typing import Optional
-
+import os
 
 
 class Parser:
 
+    def load_taskset_csv(self, relative_csv_path: str) -> pd.DataFrame:
+        """
+        Load ONE taskset CSV given a relative path (relative to main.py / project root),
+        rename columns to internal names, and add csv_id.
+        """
+        rel_path = relative_csv_path.replace("/", "\\")
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        abs_path = os.path.normpath(os.path.join(script_dir, rel_path))
+
+        df = pd.read_csv(abs_path)
+
+        # normalize headers (BCET/WCET/Period/Deadline -> C_i_min/C_i/T_i/D_i)
+        self._rename_headers(df)
+
+        if "csv_id" not in df.columns:
+            df["csv_id"] = Path(rel_path).name
+
+        return df
         
     def taskSetParser(self, path: str) -> pd.DataFrame:
             csvs = self._find_all_csvs_from_folder_relative_path(path)
