@@ -1,3 +1,4 @@
+from __future__ import annotations
 import math
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
