@@ -42,10 +42,7 @@ def main():
             print(f"Simulator scheduability: {result_for_algorithm.is_scheduable_simulator}")
             print("\n")
             
-            #Each specific task
-            # plotting.plot_average_response_times(result_for_algorithm)
-            # plotting.plot_average_lateness(result_for_algorithm)
-            # plotting.plot_activation_completion_spread(result_for_algorithm)
+            plotting.plot_all_task_metrics(result_for_algorithm)
 
         
 if __name__ == '__main__':

@@ -83,6 +83,7 @@ class Simulator:
         util = self.scheduler.get_utilization(task_set)
 
         return TaskSetMetrics(
+            task_set_name = task_set["csv_id"][0],
             algorithm=str(self.scheduler),
             task_set=task_set,
             average_response_time=round(average_response_time, 2),
@@ -185,6 +186,7 @@ class Simulator:
 class TaskSetMetrics:
     
     # ----- task set level -----
+    task_set_name:str
     algorithm:str 
     is_scheduable_simulator: bool
     task_set: pd.DataFrame

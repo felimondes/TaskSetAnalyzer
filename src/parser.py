@@ -14,8 +14,8 @@ class Parser:
                 df = pd.read_csv(csv)
                 self._rename_headers(df)
                 p = Path(csv)
-                last_two = Path(*p.parts[-1:])
-                df["csv_id"] = str(last_two)
+                last = Path(*p.parts[-1:])
+                df["csv_id"] = str(last)
                 dfs.append(df)
             return dfs
     
