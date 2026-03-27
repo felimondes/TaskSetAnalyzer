@@ -52,7 +52,7 @@ def main():
         
         elif analysis_mode == "2":
             # Folder analysis
-            folder_path = "easy_examples/schedulable"
+            folder_path = "Other_examples\\0-jitter\\0.90-util\\tasksets"
             folder_results = analyze_tasksets_in_folder(folder_path)
             print_analysis_summary(folder_results)
             
@@ -71,7 +71,7 @@ def main():
         folder = "easy_examples\\schedulable"
         
 
-        dfs = parser.taskSetParser(not_sched)
+        dfs = parser.taskSetParser(folder)
         print("running simulation for each algorithm")
         results = run_simulation_for_each_algorithm(dfs, [EDF(), RateMonotonic()])
         print("Done running simulations for each algorithm")
@@ -92,9 +92,7 @@ def main():
                 print("\n")
                 
                 #Each specific task
-                # plotting.plot_average_response_times(result_for_algorithm)
-                # plotting.plot_average_lateness(result_for_algorithm)
-                # plotting.plot_activation_completion_spread(result_for_algorithm)
+                plotting.plot_all_task_metrics(result_for_algorithm)
     else:
             print("Invalid choice. Enter 1 or 2.")
         
