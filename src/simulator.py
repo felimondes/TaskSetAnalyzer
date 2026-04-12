@@ -28,22 +28,28 @@ class Simulator:
         self.current_time: int = 0
         self.arrival_idx: int = 0
         self.job_in_execution: Optional[Job] = None
+        
     def _run(self) -> None:
+        i = 0
         while self._has_pending_events():
             self._activate_newly_arrived_jobs()
 
             job = self.scheduler.select_next_job_from_active(self.active_jobs)
-
             if job is None:
                 self._advance_to_next_arrival()
                 continue
-            
+
+            i = i + 1
+
+            if "10_0" == job.job_id and i==1:
+                print(i)
             if job.s is None:
                 job.set_started(self.current_time)
 
             execution_time = self._determine_execution_time(job)
             self._execute_job(job, execution_time)
 
+            
             self.current_time += execution_time
             if job.is_complete():
                 self._remove_executing_job()
@@ -118,6 +124,7 @@ class Simulator:
             job.execute(time_units)
             job.isExecuting = True
             self.job_in_execution = job
+
     def _remove_executing_job(self) -> None:
         if self.job_in_execution:
             self.job_in_execution.isExecuting = False
@@ -125,24 +132,36 @@ class Simulator:
 
     def _has_pending_events(self) -> bool:
         return self.arrival_idx < len(self.sorted_arrival_times) or bool(self.active_jobs)
+    
     def _calculate_time_until_next_event(self) -> int:
         """Time until the next arrival or the end of the hyperperiod."""
         if self._is_more_arrivals():
             return self.sorted_arrival_times[self.arrival_idx] - self.current_time
-        return math.inf #there is no event afterwards
+        return None
+    
     def _determine_execution_time(self, job: Job) -> int:
         """Execution slice length before the next scheduling decision."""
         time_until_next_event = self._calculate_time_until_next_event()
+
+        if time_until_next_event == None:
+            return job.remaining_time_till_done
+        
         if time_until_next_event == 0:
-            return 1
+            return min(1, job.remaining_time_till_done)
+
         return min(job.remaining_time_till_done, time_until_next_event)
+    
+
+
     def _advance_to_next_arrival(self) -> None:
         """Advance simulation time to the next arrival time or hyperperiod end."""
         if self._is_more_arrivals():
             self.current_time = self.sorted_arrival_times[self.arrival_idx]
             self.arrival_idx += 1
             return
+        
         self.current_time = self.hyperperiod
+
     def _update_arrival_index(self) -> None:
         """Advance the arrival index if we've reached or passed the next arrival."""
         if self._is_more_arrivals() and self.current_time >= self.sorted_arrival_times[self.arrival_idx]:
@@ -151,6 +170,9 @@ class Simulator:
         """Move jobs that arrive at `current_time` to the active list."""
         if self.current_time in self.jobs_by_arrival_time:
             self.active_jobs.extend(self.jobs_by_arrival_time[self.current_time])
+            del self.jobs_by_arrival_time[self.current_time]
+            
+            
     def _calculate_jobs_arrival_times(self, task_set: pd.DataFrame, hyperperiod: int) -> Dict[int, List[Job]]:
         """Instantiate Job objects for each release within the hyperperiod."""
         jobs_arrival_times: Dict[int, List[Job]] = {}

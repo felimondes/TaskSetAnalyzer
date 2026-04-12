@@ -1,6 +1,8 @@
 import pandas as pd
 from typing import Optional
-
+import random
+random.seed(42)
+pd.set_option("display.max_colwidth", None)
 
 class Job:
     """Represents a single job (release) of a periodic task.
@@ -13,13 +15,15 @@ class Job:
         self.job_id: str = f"{tasktype['task_id']}_{activation}"
         self.task_id: str = tasktype['task_id']
 
+        
         # Task parameters
         self.T: int = int(tasktype['T_i'])
         relative_deadline = int(tasktype['D_i'])
         execution_time = self._calculate_execution_time(tasktype, wcet) 
 
+        
         # Dynamic state
-        self.remaining_time_till_done: int = execution_time
+        self.remaining_time_till_done = execution_time
         self.d: int = activation + relative_deadline  # absolute deadline
         self.a: int = activation                      # activation time
         self.s: Optional[int] = None                  # start time
@@ -34,15 +38,14 @@ class Job:
         if wcet:
             return tasktype["C_i"]
         elif "C_i_min" in tasktype:
-            from random import randrange
-            return randrange(tasktype["C_i_min"], tasktype['C_i']+1)
+            return random.randrange(tasktype["C_i_min"], tasktype['C_i']+1)
         else:
             raise ValueError("calculation of execution_time not working")
 
     def is_complete(self) -> bool:
         if self.remaining_time_till_done < 0:
             raise ValueError(
-                f"Job {self.task_id} over-executed by {-self.remaining_time_till_done} time units"
+                f"Job {self.task_id} over-executed by {self.remaining_time_till_done} time units"
             )
         return self.remaining_time_till_done == 0
 

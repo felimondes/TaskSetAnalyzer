@@ -25,8 +25,15 @@ class Parser:
 
         return df
         
-    def taskSetParser(self, path: str) -> pd.DataFrame:
-            csvs = self._find_all_csvs_from_folder_relative_path(path)
+    def load_all_csvs_recursive(self, path: str) -> list[pd.DataFrame]:
+            import os
+            csvs = []
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            for root, dirs, files in os.walk(script_dir + "\\" + path):
+                for file_name in files:
+                    csv_path = root + "\\" + file_name
+                    csvs.append(csv_path)
+
             dfs = []
             for csv in csvs:
                 df = pd.read_csv(csv)
@@ -36,16 +43,6 @@ class Parser:
                 df["csv_id"] = str(last)
                 dfs.append(df)
             return dfs
-    
-    def _find_all_csvs_from_folder_relative_path(self, relative_path: str) -> list[str]:
-        import os
-        csvs = []
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        for root, dirs, files in os.walk(script_dir + "\\" + relative_path):
-            for file_name in files:
-                csv_path = root + "\\" + file_name
-                csvs.append(csv_path)
-        return csvs
 
     def _rename_headers(self, df:pd.DataFrame):
         df.rename(columns={
@@ -62,7 +59,7 @@ class Parser:
 
 if __name__ == '__main__':
     tasksetparser = Parser()
-    dfs = tasksetparser.taskSetParser("src/test_examples")
+    dfs = tasksetparser.load_all_csvs_recursive("src/test_examples")
     for df in dfs:
         print(df.columns)
     
