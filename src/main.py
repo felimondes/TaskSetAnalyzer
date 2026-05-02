@@ -1,24 +1,24 @@
-from simulator import Simulator, TaskSetMetrics
-from response_time_analysis_RM import response_time_analysis_rta
-from response_time_analysis_RM import analyze_taskset, print_analysis_summary
-from parser import Parser
-from earliest_deadline_first import EDF
-from rate_monotonic import RateMonotonic
+from src.simulatorTool.simulator import Simulator, TaskSetMetrics
+from src.analysisTool.response_time_analysis_RM import response_time_analysis_rta
+from src.analysisTool.response_time_analysis_RM import analyze_taskset, print_analysis_summary
+from src.misc.parser import Parser
+from src.simulatorTool.earliest_deadline_first import EDF
+from src.simulatorTool.rate_monotonic import RateMonotonic
 import numpy as np
 import pandas as pd
-from parser import Parser
 from typing import Optional, Dict
-import plotting
+import src.misc.plotting as plotting
 sim = Simulator()
 parser = Parser()
+# folder_path = "test_examples"
 folder_path = "test_examples"
-
-
+algorithms = [RateMonotonic(), EDF()]
+wcet = True
 path_to_taskset = "test_examples/not_schedulable/Unschedulable_Full_Utilization_NonUnique_Periods_taskset.csv"
 
 def display_rta_results(dfs: list[pd.DataFrame]) -> None:
     """
-    Nicely displays WCRT + schedulability results for multiple task sets.
+    Made with AI
     """
 
     for idx, df in enumerate(dfs, start=1):
@@ -43,78 +43,50 @@ def display_rta_results(dfs: list[pd.DataFrame]) -> None:
         print("\nSummary:")
         print(f"- Tasks: {len(results)}")
         print(f"- Deadline misses: {(~results['meets_deadline']).sum()}")
-
-
 def run_simulation_for_each_algorithm(dfs, algorithms) -> Dict[str, list[TaskSetMetrics]]:
     results = {}
     for algorithm in algorithms:
         for df in dfs: 
-            print("running")
-            print(df["csv_id"])
-            wcet = False
             result = sim.start(df, algorithm, wcet)
             results.setdefault(df["csv_id"][0], []).append((result))
     return results
-
-
 def analysis():
-    analysis_mode = "2"
-    if analysis_mode == "1":
-        
-        df = parser.load_taskset_csv(path_to_taskset)
-        is_sched, rta_results = response_time_analysis_rta(df)
-        
-        print(f"\nTaskset: {df['csv_id'].iloc[0]}")
-        print(f"RTA schedulable: {is_sched}")
-        
-        cols = [c for c in ["task_id", "C_i", "T_i", "D_i", "R_i", "meets_deadline"] if c in rta_results.columns]
-        print(rta_results[cols].to_string(index=False)) 
-
-    elif analysis_mode == "2":
-        dfs = parser.load_all_csvs_recursive(folder_path)
-        display_rta_results(dfs)
-        
-        
-
-        
-    
-    else:
-        print("Invalid choice. Enter 1 or 2.")     
-
-
+    dfs = parser.load_all_csvs_recursive(folder_path)
+    display_rta_results(dfs)
 
 def simulation():
-        folder = "test_examples"
-        # folder = "dab"
-        dfs = parser.load_all_csvs_recursive(folder)
-        print("running simulation for each algorithm")
-        results = run_simulation_for_each_algorithm(dfs, [RateMonotonic()])
-        print("Done running simulations for each algorithm")
+        dfs = parser.load_all_csvs_recursive(folder_path)
+        print("Running simulations - this take 1 min ish")
+        results = run_simulation_for_each_algorithm(dfs, algorithms)
 
         for task_set, results_for_each_algorithm in results.items():
-            print(f"------- NEW TASK SET  ---------- \n")
             for result_for_algorithm in results_for_each_algorithm:
                 #Task set 
-                # print(f"--- Metrics per algorithm  ---")
+                print(f"--- Metrics per algorithm  ---")
                 print(f"Algorithm: {result_for_algorithm.algorithm}")
-                print(f"Name: {result_for_algorithm.task_set["csv_id"][0]}")
-                # print(f"Util: {result_for_algorithm.util}")
-                # print(f"Lub: {result_for_algorithm.lub}")
-                # print(f"Late tasks: {result_for_algorithm.num_late_tasks}")
+                print(f"Name: {result_for_algorithm.task_set['csv_id'][0]}")
+                print(f"Util: {result_for_algorithm.util}")
+                print(f"Late tasks: {result_for_algorithm.num_late_tasks}")
                 print(f"Theoretical schedud: {result_for_algorithm.is_schedulable_theoretical}")
                 print(f"Simulator scheduability: {result_for_algorithm.is_scheduable_simulator}")
                 print("\n")
                 
-                # #Each specific task
-                # plotting.plot_all_task_metrics(result_for_algorithm)
+        
+                plotting.plot_wcrt_table(result_for_algorithm)
      
 def main():
-        # analysis()
-        simulation()
+        while True:
+            print("Press 1 to run analysis tool")
+            print("Press 2 to run simulation tool")
+            answer = input()
+            if answer == "1":
+                analysis()
+            elif answer == "2": 
+                simulation()
+            else:
+                print("FAILED: Press 1 or 2 b")
+            print("\n \n")
 
-            
-if __name__ == '__main__':
-    main()
 
 
 
