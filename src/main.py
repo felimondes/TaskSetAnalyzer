@@ -78,13 +78,16 @@ def main():
         while True:
             print("Press 1 to run analysis tool")
             print("Press 2 to run simulation tool")
+            print("Press 3 to exit")
             answer = input()
             if answer == "1":
                 analysis()
             elif answer == "2": 
                 simulation()
+            elif answer == "3":
+                 break
             else:
-                print("FAILED: Press 1 or 2 b")
+                print("FAILED: Press 1, 2 or 3.")
             print("\n \n")
 
 
