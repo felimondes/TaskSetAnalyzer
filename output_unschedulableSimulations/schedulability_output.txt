@@ -1,0 +1,70 @@
+--- Metrics per algorithm  ---
+Algorithm: RateMonotonic
+Name: Unschedulable_Full_Utilization_NonUnique_PeriodsASDFFASD_taskset.csv
+Util: 1.0027835051546392
+Late tasks: 0
+Theoretical schedud: False
+Simulator scheduability: True
+
+
+--- Metrics per algorithm  ---
+Algorithm: EDF
+Name: Unschedulable_Full_Utilization_NonUnique_PeriodsASDFFASD_taskset.csv
+Util: 1.0027835051546392
+Late tasks: 0
+Theoretical schedud: False
+Simulator scheduability: True
+
+
+--- Metrics per algorithm  ---
+Algorithm: RateMonotonic
+Name: Unschedulable_Full_Utilization_Unique_Periods_taskset.csv
+Util: 1.0
+Late tasks: 0
+Theoretical schedud: False
+Simulator scheduability: True
+
+
+--- Metrics per algorithm  ---
+Algorithm: EDF
+Name: Unschedulable_Full_Utilization_Unique_Periods_taskset.csv
+Util: 1.0
+Late tasks: 0
+Theoretical schedud: True
+Simulator scheduability: True
+
+
+--- Metrics per algorithm  ---
+Algorithm: RateMonotonic
+Name: Unschedulable_High_Utilization_NonUnique_Periods_taskset.csv
+Util: 0.8474106364428945
+Late tasks: 0
+Theoretical schedud: False
+Simulator scheduability: True
+
+
+--- Metrics per algorithm  ---
+Algorithm: EDF
+Name: Unschedulable_High_Utilization_NonUnique_Periods_taskset.csv
+Util: 0.8474106364428945
+Late tasks: 0
+Theoretical schedud: True 
+Simulator scheduability: True
+
+
+--- Metrics per algorithm  ---
+Algorithm: RateMonotonic
+Name: Unschedulable_High_Utilization_Unique_Periods_taskset.csv
+Util: 0.8695238095238096
+Late tasks: 0
+Theoretical schedud: False
+Simulator scheduability: True
+
+
+--- Metrics per algorithm  ---
+Algorithm: EDF
+Name: Unschedulable_High_Utilization_Unique_Periods_taskset.csv
+Util: 0.8695238095238096
+Late tasks: 0
+Theoretical schedud: True
+Simulator scheduability: True

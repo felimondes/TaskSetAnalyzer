@@ -10,11 +10,23 @@ from typing import Optional, Dict
 import src.misc.plotting as plotting
 sim = Simulator()
 parser = Parser()
-# folder_path = "test_examples"
-folder_path = "test_examples"
+
+
+
+#touch: simulation panel
+wcet = False
+isOnlyUnschedulableTestCases = False
+
+if isOnlyUnschedulableTestCases:
+    amountOfHyperPeriods = 100
+else:
+     amountOfHyperPeriods = 1
+
+
+#dont touch
 algorithms = [RateMonotonic(), EDF()]
-wcet = True
-path_to_taskset = "test_examples/not_schedulable/Unschedulable_Full_Utilization_NonUnique_Periods_taskset.csv"
+path_to_all_tests = "test_examples"
+path_to_unschedulable = "test_examples/not_schedulable"
 
 def display_rta_results(dfs: list[pd.DataFrame]) -> None:
     """
@@ -46,16 +58,21 @@ def display_rta_results(dfs: list[pd.DataFrame]) -> None:
 def run_simulation_for_each_algorithm(dfs, algorithms) -> Dict[str, list[TaskSetMetrics]]:
     results = {}
     for algorithm in algorithms:
-        for df in dfs: 
-            result = sim.start(df, algorithm, wcet)
+        for df in dfs:
+            result = sim.start(df, algorithm, wcet, amountOfHyperPeriods)
             results.setdefault(df["csv_id"][0], []).append((result))
     return results
 def analysis():
-    dfs = parser.load_all_csvs_recursive(folder_path)
+    dfs = parser.load_all_csvs_recursive(path_to_all_tests)
     display_rta_results(dfs)
 
 def simulation():
-        dfs = parser.load_all_csvs_recursive(folder_path)
+    
+        if isOnlyUnschedulableTestCases:
+             dfs = parser.load_all_csvs_recursive(path_to_unschedulable)
+        else:
+            dfs = parser.load_all_csvs_recursive(path_to_all_tests)
+
         print("Running simulations - this take 1 min ish")
         results = run_simulation_for_each_algorithm(dfs, algorithms)
 
@@ -72,19 +89,20 @@ def simulation():
                 print("\n")
                 
         
-                plotting.plot_wcrt_table(result_for_algorithm)
+                plotting.plot_wcrt_table(result_for_algorithm, isOnlyUnschedulableTestCases)
      
 def main():
         while True:
             print("Press 1 to run analysis tool")
             print("Press 2 to run simulation tool")
+            print("Press anything else to quit")
             answer = input()
             if answer == "1":
                 analysis()
             elif answer == "2": 
                 simulation()
             else:
-                print("FAILED: Press 1 or 2 b")
+                break
             print("\n \n")
 
 

@@ -9,15 +9,15 @@ from src.simulatorTool.job import Job
 
 class Simulator:
  
-    def start(self, task_set: pd.DataFrame, scheduler: Any, wcet: bool) -> TaskSetMetrics:
-        self._initialize(task_set, scheduler, wcet)
+    def start(self, task_set: pd.DataFrame, scheduler: Any, wcet: bool, amountOfHyperPeriods) -> TaskSetMetrics:
+        self._initialize(task_set, scheduler, wcet, amountOfHyperPeriods)
         self._run()
         return self._calculate_metrics(task_set)
     
-    def _initialize(self, task_set: pd.DataFrame, scheduler: Any, wcet: bool) -> None:
+    def _initialize(self, task_set: pd.DataFrame, scheduler: Any, wcet: bool, amountOfHyperPeriods: int) -> None:
         self.wcet = wcet
         self.scheduler = scheduler
-        self.hyperperiod: int = self._get_hyperperiod(task_set)
+        self.hyperperiod: int = self._get_hyperperiod(task_set) * amountOfHyperPeriods
 
         self.jobs_by_arrival_time: Dict[int, List[Job]] = self._calculate_jobs_arrival_times(task_set, self.hyperperiod)
         self.sorted_arrival_times: List[int] = sorted(self.jobs_by_arrival_time.keys())

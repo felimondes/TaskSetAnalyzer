@@ -121,11 +121,13 @@ def plot_all_task_metrics(metrics: TaskSetMetrics) -> None:
 
     import matplotlib.pyplot as plt
 
-def plot_wcrt_table(metrics):
-    #made with AI :)
+import os
+import matplotlib.pyplot as plt
+
+def plot_wcrt_table(metrics, isOnlyUnschedulableTestCases):
+
     task_ids = list(metrics.job_response_times_by_task.keys())
 
-    # Map task_id -> period
     task_periods = {
         row["task_id"]: row["T_i"]
         for _, row in metrics.task_set.iterrows()
@@ -137,22 +139,12 @@ def plot_wcrt_table(metrics):
         values = metrics.job_response_times_by_task[t]
         numeric = [v for _, v in values if v is not None]
 
-        if numeric:
-            wcrt = max(numeric)
-        else:
-            wcrt = 0
-
+        wcrt = max(numeric) if numeric else 0
         period = task_periods[t]
         normalized = wcrt / period if period > 0 else 0
 
-        table_data.append([
-            t,
-            round(wcrt, 2),
-            period,
-            round(normalized, 3)
-        ])
+        table_data.append([t, round(wcrt, 2), period, round(normalized, 3)])
 
-    # Column labels
     columns = ["Task", "WCRT", "Period", "R / T"]
 
     fig, ax = plt.subplots(figsize=(8, len(task_ids) * 0.5 + 1))
@@ -170,16 +162,18 @@ def plot_wcrt_table(metrics):
 
     plt.title(f"WCRT Table - {metrics.algorithm}", pad=10)
 
-    # 🔥 Save
-    import os
-    current_dir = os.path.dirname(__file__)
-    images_dir = os.path.join(current_dir, "images")
-    os.makedirs(images_dir, exist_ok=True)
+   # ---- OUTPUT PATH ----
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
-    filename = os.path.join(
-        images_dir,
-        f"{metrics.task_set_name}_{metrics.algorithm}_table.png"
-    )
+    if isOnlyUnschedulableTestCases:
+        output_dir = os.path.join(base_dir, "output_unschedulableSimulations")
+    else:
+        output_dir = os.path.join(base_dir, "output_allTestCases")
 
-    plt.savefig(filename, bbox_inches="tight", dpi=300)
-    # plt.show()
+    os.makedirs(output_dir, exist_ok=True)
+
+    filename = f"{metrics.task_set_name}_{metrics.algorithm}_table.png"
+    full_path = os.path.join(output_dir, filename)
+
+    plt.savefig(full_path, bbox_inches="tight", dpi=300)
+    plt.close(fig)
