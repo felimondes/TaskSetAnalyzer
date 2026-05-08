@@ -1,4 +1,4 @@
-To run this code: (this runs all test cases in the test_examples folder).
+To run this code:
 
 - download the python libraries in requirements.txt
 - run run.py to select between simulation or analysis tool.
@@ -6,12 +6,10 @@ To run this code: (this runs all test cases in the test_examples folder).
   For the simulation tool task wise results are given in the terminal,
   while WCRTs for each job within task sets can be found in the src/images folder.
 
-To find WCRT for EDF and RM using the simulation tool:
+You can configure the simulation in the #SIMULATION PANEL in the top of main.py.
 
-Change the wcet flag in main.py line 16 to true:
-wcet = False
-
-This makes the simulation tool run with only wcet instead of varying times.
+* Use flag "wcet" to toggle between WCET to varying execution time
+* Use flag "isOnlyUnSchedulableTestCases" to only run unschedulable test cases. This will run 100 hyperperiods for each task set. This is important testing the simulation.
 
 To change seed for the simulation tool change line 4 in job.py in the simulatorTool folder:
 random.seed(42)
