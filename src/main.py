@@ -15,7 +15,7 @@ parser = Parser()
 
 #touch: simulation panel
 wcet = False
-isOnlyUnschedulableTestCases = False
+isOnlyUnschedulableTestCases = True
 
 if isOnlyUnschedulableTestCases:
     amountOfHyperPeriods = 100
@@ -65,7 +65,6 @@ def run_simulation_for_each_algorithm(dfs, algorithms) -> Dict[str, list[TaskSet
 def analysis():
     dfs = parser.load_all_csvs_recursive(path_to_all_tests)
     display_rta_results(dfs)
-
 def simulation():
     
         if isOnlyUnschedulableTestCases:
