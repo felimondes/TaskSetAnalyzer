@@ -13,7 +13,7 @@ parser = Parser()
 # folder_path = "test_examples"
 folder_path = "test_examples"
 algorithms = [RateMonotonic(), EDF()]
-wcet = True
+wcet = False
 path_to_taskset = "test_examples/not_schedulable/Unschedulable_Full_Utilization_NonUnique_Periods_taskset.csv"
 
 def display_rta_results(dfs: list[pd.DataFrame]) -> None:
