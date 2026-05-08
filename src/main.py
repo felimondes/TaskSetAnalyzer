@@ -101,6 +101,8 @@ def main():
                 analysis()
             elif answer == "2": 
                 simulation()
+            elif answer == "3":
+                 break
             else:
                 break
             print("\n \n")
